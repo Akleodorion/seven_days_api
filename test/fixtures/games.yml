@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  status: MyString
+  stopped_by: 1
+  players: 
+  end_date: 2025-04-20 21:56:32
+
+two:
+  status: MyString
+  stopped_by: 1
+  players: 
+  end_date: 2025-04-20 21:56:32
