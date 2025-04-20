@@ -109,7 +109,9 @@ GEM
     net-smtp (0.5.1)
       net-protocol
     nio4r (2.7.4)
-    nokogiri (1.18.5-x86_64-darwin)
+    nokogiri (1.18.7-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.18.7-x86_64-darwin)
       racc (~> 1.4)
     pp (0.6.2)
       prettyprint
@@ -156,6 +158,7 @@ GEM
       psych (>= 4.0.0)
     reline (0.6.0)
       io-console (~> 0.5)
+    sqlite3 (1.7.3-arm64-darwin)
     sqlite3 (1.7.3-x86_64-darwin)
     stringio (3.1.5)
     thor (1.3.2)
@@ -169,6 +172,7 @@ GEM
     zeitwerk (2.7.2)
 
 PLATFORMS
+  arm64-darwin-24
   x86_64-darwin-23
 
 DEPENDENCIES
@@ -181,7 +185,7 @@ DEPENDENCIES
   tzinfo-data
 
 RUBY VERSION
-   ruby 3.2.1p31
+   ruby 3.3.7p123
 
 BUNDLED WITH
    2.4.7
