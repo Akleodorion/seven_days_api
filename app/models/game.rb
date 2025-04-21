@@ -11,7 +11,6 @@ class Game < ApplicationRecord
   }, _prefix: :status
 
   scope :active -> { find_by(status: :ongoing) }
-  # method pour passer un status de created à ongoing
 
   private
 
@@ -27,19 +26,21 @@ class Game < ApplicationRecord
   def from_created_to_ongoing
     return if self.status !=  :created
     self.status = :ongoing
-    self.end_date = 
+    self.end_date = Date.today.next_day(7)
     return self
   end
 
-  def from_ongoing_to_over
+  def from_ongoing_to_over(id)
     return if self.status !=  :ongoing
     self.status = :over
+    self.stopped_by = id
     return self
   end
 
   def from_over_to_decided
     return if self.status !=  :over
     self.status = :decided
+    # define winnner
     return self
   end
 
