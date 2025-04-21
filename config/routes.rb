@@ -6,7 +6,11 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :players, only: %i[create index update]
-      resources :games, only: %i[create update destroy index]
+      resources :games, only: %i[create update destroy] do
+        collection do
+          get :active_game
+        end
+      end
     end
   end
 
