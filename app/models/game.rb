@@ -10,7 +10,9 @@ class Game < ApplicationRecord
     archived: 'Archivé'
   }, _prefix: :status
 
-  scope :active -> { find_by(status: :ongoing) }
+  def self.active_game
+    find_by(status: :ongoing)
+  end
 
   private
 
