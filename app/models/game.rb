@@ -14,6 +14,9 @@ class Game < ApplicationRecord
     find_by(status: :ongoing)
   end
 
+  def next_step
+  end
+
   private
 
   def only_one_ongoing_game

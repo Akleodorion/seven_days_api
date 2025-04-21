@@ -4,6 +4,12 @@ class Api::V1::GamesController < ApplicationController
   end
 
   def update
+    @game = Game.find(params[:id])
+    #find out step
+    status = @game.status
+    #trigger the right update
+    #try the update
+
   end
 
   def destroy
