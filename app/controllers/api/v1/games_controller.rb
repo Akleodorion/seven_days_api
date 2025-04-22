@@ -1,19 +1,26 @@
 class Api::V1::GamesController < ApplicationController
 
   def create
+    @game = Game.new(status: :created, players: params:[:players])
+
+    if @game.save
+      @game.from_created_to_ongoing
+      @game.update
+      render json: { game: @game }, status: :created
+    else
+      render json: { errors: @game.errors.full_messages }, status: :unprocessable_entity
+    end
   end
 
   def update
     @game = Game.find(params[:id])
-    #find out step
     status = @game.status
-    #trigger the right update
-    #try the update
-
-  end
-
-  def destroy
-    @game = Game.find(params[:id])
+    @game = @game.next_step(params[:player_id])
+    if @game.update
+      render json: { game: @game, message: "La partie est passé au status: #{@game.status}" }, status: :ok
+    else
+      render json: { errors: @game.erros.full_messages }, status: :unprocessable_entity
+    end
   end
 
   def active_game

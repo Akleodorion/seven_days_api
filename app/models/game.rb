@@ -14,7 +14,19 @@ class Game < ApplicationRecord
     find_by(status: :ongoing)
   end
 
-  def next_step
+  def next_step(id: nil)
+    case status
+    when :created
+      from_created_to_ongoing
+    when :ongoing
+      from_ongoing_to_over(id)
+    when :over
+      from_over_to_decided
+    when :decided
+      from_decided_to_archived
+    else
+      self
+    end
   end
 
   private
