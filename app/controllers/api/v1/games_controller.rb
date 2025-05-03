@@ -1,11 +1,16 @@
 class Api::V1::GamesController < ApplicationController
 
   def create
-    @game = Game.new(status: :created, players: params:[:players])
+    @game = Game.new(status: :ongoing, players: params[:players_id])
+
+    @game.challenge = Challenge.created.sample
+
+    players = Player.find(id: params[:players_id])
+    players.each do |player|
+      @game.pledges << Pledge.where.not(player: player).sample
+    end
 
     if @game.save
-      @game.from_created_to_ongoing
-      @game.update
       render json: { game: @game }, status: :created
     else
       render json: { errors: @game.errors.full_messages }, status: :unprocessable_entity

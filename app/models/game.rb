@@ -1,5 +1,8 @@
 class Game < ApplicationRecord
 
+  has_one :challenge # Doit avoir un challenge
+  has_many :pledges # Doit avoir X pledges, 1 par participant
+  has_many :players
   validate :ony_one_ongoing_game, if: -> { status == 'ongoing' }
 
   enum :status {
