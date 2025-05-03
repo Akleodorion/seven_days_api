@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  status: MyString
+  description: MyString
+  player: one
+  game: one
+  target: 1
+
+two:
+  status: MyString
+  description: MyString
+  player: two
+  game: two
+  target: 1
