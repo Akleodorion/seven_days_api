@@ -19,6 +19,7 @@ class Api::V1::GamesController < ApplicationController
 
   def update
     @game = Game.find(params[:id])
+    return render json: { error: "La partie en cours n'est pas la bonne."} if @game != Game.active_game
     status = @game.status
     @game = @game.next_step(params[:player_id])
     if @game.update
