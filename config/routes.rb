@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :players, only: %i[create index update]
       resources :challenges, only: %i[create update destroy]
+      resources :pledges, only: %i[create index update destroy]
       resources :games, only: %i[create update] do
         collection do
           get :active_game
