@@ -57,10 +57,11 @@ class Game < ApplicationRecord
     return self
   end
 
-  def from_over_to_decided
+  def from_over_to_decided(winners_ids, loosers_ids)
     return if self.status !=  :over
     self.status = :decided
-    # define winnner
+    self.winners = winners_ids
+    self.loosers = loosers_ids
     return self
   end
 
@@ -68,5 +69,9 @@ class Game < ApplicationRecord
     return if self.status !=  :decided
     self.status = :archived
     return self
+  end
+
+  def pick_pledge_for_looser(id)
+    pledges.where.not(player_id: id, status: :created).sample
   end
 end
