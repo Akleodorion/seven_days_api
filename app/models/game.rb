@@ -62,16 +62,21 @@ class Game < ApplicationRecord
     self.status = :decided
     self.winners = winners_ids
     self.loosers = loosers_ids
-    return self
+    pick_pledge_for_loosers
+    self
   end
 
   def from_decided_to_archived
     return if self.status !=  :decided
     self.status = :archived
-    return self
+    self
   end
 
-  def pick_pledge_for_looser(id)
-    pledges.where.not(player_id: id, status: :created).sample
+  def pick_pledge_for_loosers
+    available_pledges = pledges.where(target_id: nil, status: created).to_a
+    loosers.each do |id|
+      pledge = available_pledges.reject { |p| p.player_id == id }.sample
+      pledge.next_step(id)
+    end
   end
 end
