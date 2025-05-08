@@ -6,33 +6,37 @@ class Game < ApplicationRecord
   validate :ony_one_ongoing_game, if: -> { status == 'ongoing' }
 
   enum :status {
-    created: 'Crée'
-    ongoing: 'En cours'
-    over: 'Terminé'
-    decided: 'Décidé'
-    archived: 'Archivé'
+    created: 0,
+    ongoing: 1,
+    over: 2,
+    decided: 3,
+    archived: 4,
   }, _prefix: :status
 
   def self.active_game
     find_by(status: :ongoing)
   end
 
-  def next_step(id: nil)
-    case status
-    when :created
-      from_created_to_ongoing
-    when :ongoing
-      from_ongoing_to_over(id)
-    when :over
-      from_over_to_decided
-    when :decided
-      from_decided_to_archived
-    else
-      self
-    end
+  def next_step(params)
+    transitions = {
+      created: -> { from_created_to_ongoing },
+      ongoing: -> { from_ongoing_to_over(params[:id]) },
+      over: -> { from_over_to_decided(params[:winners], params[:loosers]) },
+      decided: -> { from_decided_to_archived }
+    }
+
+    transitions[status.to_sym]&.call || self
   end
 
   private
+
+  def transition(expected_status:, new_status:)
+    return self unless public_send("status_#{expected_status}?")
+
+    self.status = new_status
+    yield(self) if block_given?
+    self
+  end
 
   def only_one_ongoing_game
     already_ongoing = Game.where(status: :ongoing)
@@ -44,36 +48,31 @@ class Game < ApplicationRecord
   end
 
   def from_created_to_ongoing
-    return if self.status !=  :created
-    self.status = :ongoing
-    self.end_date = Date.today.next_day(7)
-    return self
+    transition(expected_status: :created, new_status: :ongoing) do |game|
+      game.end_date = Date.today + 7
+    end
   end
 
   def from_ongoing_to_over(id)
-    return if self.status !=  :ongoing
-    self.status = :over
-    self.stopped_by = id
-    return self
+    transition(expected_status: :ongoing, new_status: :over) do |game|
+      game.stopped_by = id
+    end
   end
 
   def from_over_to_decided(winners_ids, loosers_ids)
-    return if self.status !=  :over
-    self.status = :decided
-    self.winners = winners_ids
-    self.loosers = loosers_ids
-    pick_pledge_for_loosers
-    self
+    transition(expected_status: :over, new_status: :decided) do |game|
+      game.winners = winners_ids
+      game.loosers = loosers_ids
+      pick_pledge_for_loosers
+    end
   end
 
   def from_decided_to_archived
-    return if self.status !=  :decided
-    self.status = :archived
-    self
+    transition(expected_status: :decided, new_status: :archived)
   end
 
   def pick_pledge_for_loosers
-    available_pledges = pledges.where(target_id: nil, status: created).to_a
+    available_pledges = pledges.where(target_id: nil, status: :created).to_a
     loosers.each do |id|
       pledge = available_pledges.reject { |p| p.player_id == id }.sample
       pledge.next_step(id)
