@@ -3,7 +3,8 @@ class Game < ApplicationRecord
   has_one :challenge # Doit avoir un challenge
   has_many :pledges # Doit avoir X pledges, 1 par participant
   has_many :players
-  validate :ony_one_ongoing_game, if: -> { status == 'ongoing' }
+  validate :only_one_ongoing_game, if: -> { status == 'ongoing' }
+  validate :pledges_for_each_player, if: -> { status == 'created' || 'ongoing' }
 
   enum :status {
     created: 0,
@@ -12,6 +13,8 @@ class Game < ApplicationRecord
     decided: 3,
     archived: 4,
   }, _prefix: :status
+
+  before_save :setup_game
 
   def self.active_game
     find_by(status: :ongoing)
@@ -64,6 +67,7 @@ class Game < ApplicationRecord
       game.winners = winners_ids
       game.loosers = loosers_ids
       pick_pledge_for_loosers
+      reset_unpicked_pledges
     end
   end
 
@@ -76,6 +80,40 @@ class Game < ApplicationRecord
     loosers.each do |id|
       pledge = available_pledges.reject { |p| p.player_id == id }.sample
       pledge.next_step(id)
+    end
+  end
+
+  def reset_unpicked_pledges
+    available_pledges = pledges.where(target_id: nil)
+      available_pledges.each do |pledge|
+        pledge.game_id = nil
+      end
+      update_all(available_pledges)
+  end
+
+  def pledges_for_each_player
+    pledges.count == players.count
+  end
+
+  def setup_game
+    select_challenge
+    select_pledges
+  end
+
+  def select_challenge
+    challenge = Challenge.created.sample
+    raise Error, "Pas de défis disponible" if challenge.nil?
+
+    self.challenge = challenge
+  end
+
+  def select_pledges
+    players.each do |player|
+      pledge = Pledge.created.where.not(player: player).sample
+      raise Error, "Pas de challenge disponible pour: #{player.name}" if pledge.nil?
+
+      pledge.next_step(player.id)
+      pledges << pledge
     end
   end
 end
