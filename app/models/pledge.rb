@@ -8,41 +8,43 @@ class Pledge < ApplicationRecord
   validate :description, presence: true
 
   enum status: {
-    created: 'Crée',
-    pending: 'En attente',
-    ongoing: 'En cours',
-    done: 'Terminé',
+    created: 0,
+    pending: 1,
+    ongoing: 2,
+    done: 3,
   }, _prefix: :status
 
   def next_step(id: nil)
-    case status
-    when :created
-      from_created_to_pending(id)
-    when :pending
-      from_pending_to_ongoing
-    when :ongoing
-      from_ongoing_to_done
-    else
-      self
-    end
+    transitions = {
+      created: from_created_to_ongoing(id),
+      pending: from_pending_to_ongoing,
+      ongoing: from_ongoing_to_done
+    }
+
+    transitions[status.to_sym]&.call || self
   end
 
   def from_created_to_pending(id)
-    return if self.status != :created
-    self.status = :pending
-    target_id = id
-    return self
+    transition(expected_status: :created, new_status: :pending) do |pledge|
+      pledge.target_id = id
+    end
   end
 
   def from_pending_to_ongoing
-    return if self.status != :pending
-    self.status = :ongoing
-    return self
+    transition(expected_status: :pending, new_status: :ongoing)
   end
 
   def from_ongoing_to_done
-    return if self.status != :ongoing
-    self.status = :done
+    transition(expected_status: :ongoing, new_status: :done)
+  end
+
+  private
+
+  def transition(expected_status:, new_status:)
+    return self unless public_send("status_#{expected_status}?")
+
+    self.status = new_status
+    yield(self) if block_given?
     return self
   end
 
