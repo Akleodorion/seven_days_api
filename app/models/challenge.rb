@@ -6,7 +6,7 @@ class Challenge < ApplicationRecord
 
   scope :created, -> { where(status: :created) }
 
-  enum :status {
+  enum status: {
     created: 0,
     ongoing: 1,
     done: 2,

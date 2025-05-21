@@ -1,20 +1,19 @@
 class Game < ApplicationRecord
 
-  has_one :challenge # Doit avoir un challenge
-  has_many :pledges # Doit avoir X pledges, 1 par participant
-  has_many :players
+  has_one :challenge, dependent: :destroy # Doit avoir un challenge
+  has_many :pledges, dependent: :destroy # Doit avoir X pledges, 1 par participant
+  has_many :participants, dependent: :destroy
+  has_many :players, through: :participants
   validate :only_one_ongoing_game, if: -> { status == 'ongoing' }
   validate :pledges_for_each_player, if: -> { status == 'created' || 'ongoing' }
 
-  enum :status {
+  enum status: {
     created: 0,
     ongoing: 1,
     over: 2,
     decided: 3,
     archived: 4,
   }, _prefix: :status
-
-  before_save :setup_game
 
   def self.active_game
     find_by(status: :ongoing)
@@ -109,10 +108,14 @@ class Game < ApplicationRecord
 
   def select_pledges
     players.each do |player|
-      pledge = Pledge.created.where.not(player: player).sample
+
+      pledge = Pledge.where(status: 0).where.not(player: player).sample
+            puts '-------------------------------------'
+      puts pledge
+      puts '-------------------------------------'
       raise Error, "Pas de challenge disponible pour: #{player.name}" if pledge.nil?
 
-      pledge.next_step(player.id)
+      pledge.next_step(id: player.id)
       pledges << pledge
     end
   end

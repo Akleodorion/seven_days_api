@@ -2,10 +2,7 @@ class Pledge < ApplicationRecord
   belongs_to :player
   belongs_to :game, optional: true
 
-  has_one :target_id, optional: true
-  has_one :description, optional: true
-
-  validate :description, presence: true
+  validates :description, presence: true
 
   enum status: {
     created: 0,
@@ -16,7 +13,7 @@ class Pledge < ApplicationRecord
 
   def next_step(id: nil)
     transitions = {
-      created: from_created_to_ongoing(id),
+      created: from_created_to_pending(id),
       pending: from_pending_to_ongoing,
       ongoing: from_ongoing_to_done
     }
