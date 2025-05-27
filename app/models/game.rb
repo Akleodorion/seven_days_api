@@ -4,7 +4,7 @@ class Game < ApplicationRecord
   has_many :pledges, dependent: :destroy # Doit avoir X pledges, 1 par participant
   has_many :participants, dependent: :destroy
   has_many :players, through: :participants
-  validate :only_one_ongoing_game, if: -> { status == 'ongoing' }
+  validate :only_one_ongoing_game, if: -> { status == ('ongoing' || 'over' || 'decided') }
   validate :pledges_for_each_player, if: -> { status == 'created' || 'ongoing' }
 
   enum status: {
@@ -16,14 +16,14 @@ class Game < ApplicationRecord
   }, _prefix: :status
 
   def self.active_game
-    find_by(status: :ongoing)
+    find_by(status: %i[ongoing over decided])
   end
 
   def next_step(params)
     transitions = {
       created: -> { from_created_to_ongoing },
-      ongoing: -> { from_ongoing_to_over(params[:id]) },
-      over: -> { from_over_to_decided(params[:winners], params[:loosers]) },
+      ongoing: -> { from_ongoing_to_over(params[:player_id]) },
+      over: -> { from_over_to_decided(params[:game][:winners], params[:game][:loosers]) },
       decided: -> { from_decided_to_archived }
     }
 
@@ -61,7 +61,9 @@ class Game < ApplicationRecord
     end
   end
 
-  def from_over_to_decided(winners_ids, loosers_ids)
+  def from_over_to_decided(winners, loosers)
+    winners_ids = winners.map { |winner| winner[:id] }
+    loosers_ids = loosers.map { |looser| looser[:id] }
     transition(expected_status: :over, new_status: :decided) do |game|
       game.winners = winners_ids
       game.loosers = loosers_ids
@@ -83,11 +85,7 @@ class Game < ApplicationRecord
   end
 
   def reset_unpicked_pledges
-    available_pledges = pledges.where(target_id: nil)
-      available_pledges.each do |pledge|
-        pledge.game_id = nil
-      end
-      update_all(available_pledges)
+    pledges.where(target_id: nil).update_all(game_id: nil)
   end
 
   def pledges_for_each_player
@@ -108,11 +106,7 @@ class Game < ApplicationRecord
 
   def select_pledges
     players.each do |player|
-
       pledge = Pledge.where(status: 0).where.not(player: player).sample
-            puts '-------------------------------------'
-      puts pledge
-      puts '-------------------------------------'
       raise Error, "Pas de challenge disponible pour: #{player.name}" if pledge.nil?
 
       pledge.next_step(id: player.id)

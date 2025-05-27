@@ -3,9 +3,12 @@ class Api::V1::GamesController < ApplicationController
   def create
     ActiveRecord::Base.transaction do
       @game = Game.new(status: :ongoing, end_date: Date.today + 7)
-
+      players = params[:players].map do |player|
+        player[:id]
+      end
+      puts players
       if @game.save!
-        players = Player.find([1, 2]) # ou récupérés dynamiquement
+        players = Player.find(players) # ou récupérés dynamiquement
 
         players.each do |player|
           Participant.create(game: @game, player: player)
@@ -14,7 +17,7 @@ class Api::V1::GamesController < ApplicationController
         @game.reload
         @game.send(:setup_game) # appel manuel du setup si nécessaire
 
-        render json: { game: @game }, status: :created
+        render json: { game: @game }, include: ['challenge', 'pledges', 'players'], status: :created
       end
     end
     rescue Error => e
@@ -27,9 +30,9 @@ class Api::V1::GamesController < ApplicationController
     @game = Game.find(params[:id])
     return render json: { error: "La partie en cours n'est pas la bonne."} if @game != Game.active_game
     status = @game.status
-    @game = @game.next_step(params[:player_id])
-    if @game.update
-      render json: { game: @game, message: "La partie est passé au status: #{@game.status}" }, status: :ok
+    @game = @game.next_step(params)
+    if @game.save!
+      render json: { game: @game, message: "La partie est passé au status: #{@game.status}" }, include: ['challenge', 'pledges', 'players'], status: :ok
     else
       render json: { errors: @game.erros.full_messages }, status: :unprocessable_entity
     end
@@ -37,13 +40,13 @@ class Api::V1::GamesController < ApplicationController
 
   def active_game
     @game = Game.active_game
-    render json: { game: @game }, status: :ok
+    render json: { game: @game }, include: ['challenge', 'pledges', 'players'], status: :ok
   end
 
   private
 
   def games_params
-    params.require(:game).permit(:status, :stopped_by, :players, :end_date)
+    params.require(:game).permit(:status, :stopped_by, :players, :end_date, :players_id)
   end
 
 end
