@@ -13,11 +13,10 @@ class Pledge < ApplicationRecord
 
   def next_step(id: nil)
     transitions = {
-      created: from_created_to_pending(id),
-      pending: from_pending_to_ongoing,
-      ongoing: from_ongoing_to_done
+      created: -> { from_created_to_pending(id) },
+      pending: -> { from_pending_to_ongoing },
+      ongoing: -> {from_ongoing_to_done },
     }
-
     transitions[status.to_sym]&.call || self
   end
 
