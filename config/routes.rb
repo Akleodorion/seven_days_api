@@ -5,7 +5,11 @@ Rails.application.routes.draw do
   # root "articles#index"
   namespace :api do
     namespace :v1 do
-      resources :players, only: %i[create index update]
+      resources :players, only: %i[create index update] do
+        collection do
+          get :current_player
+        end
+      end
       resources :challenges, only: %i[create update destroy]
       resources :pledges, only: %i[create index update destroy]
       resources :games, only: %i[create update] do

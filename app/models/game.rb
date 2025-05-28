@@ -67,8 +67,7 @@ class Game < ApplicationRecord
     transition(expected_status: :over, new_status: :decided) do |game|
       game.winners = winners_ids
       game.loosers = loosers_ids
-      pick_pledge_for_loosers
-      reset_unpicked_pledges
+      reset_unpicked_pledges(winners_ids)
     end
   end
 
@@ -76,16 +75,16 @@ class Game < ApplicationRecord
     transition(expected_status: :decided, new_status: :archived)
   end
 
-  def pick_pledge_for_loosers
-    available_pledges = pledges.where(target_id: nil, status: :created).to_a
-    loosers.each do |id|
-      pledge = available_pledges.reject { |p| p.player_id == id }.sample
-      pledge.next_step(id)
-    end
-  end
+  # def pick_pledge_for_loosers
+  #   available_pledges = pledges.where(target_id: nil, status: :created).to_a
+  #   loosers.each do |id|
+  #     pledge = available_pledges.reject { |p| p.player_id == id }.sample
+  #     pledge.next_step(id)
+  #   end
+  # end
 
-  def reset_unpicked_pledges
-    pledges.where(target_id: nil).update_all(game_id: nil)
+  def reset_unpicked_pledges(winners_ids)
+    pledges.where(target_id: winners_ids).update_all(game_id: nil, target_id: nil)
   end
 
   def pledges_for_each_player
