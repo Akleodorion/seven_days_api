@@ -1,7 +1,8 @@
 class Api::V1::PlayersController < ApplicationController
 
   def current_player
-    @player = Player.find(id: params[:player_id])
+    @player = Player.find(players_params[:id])
+    render json: { player: @player }
   end
   def index
     @players = Player.all
@@ -30,6 +31,6 @@ class Api::V1::PlayersController < ApplicationController
   private
 
   def players_params
-    params.require(:player).permit(:name)
+    params.require(:player).permit(:name, :id)
   end
 end
