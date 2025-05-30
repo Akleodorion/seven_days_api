@@ -1,7 +1,7 @@
 class Api::V1::PlayersController < ApplicationController
 
   def current_player
-    @player = Player.find(players_params[:id])
+    @player = Player.find(params[:id])
     render json: { player: @player }
   end
   def index
