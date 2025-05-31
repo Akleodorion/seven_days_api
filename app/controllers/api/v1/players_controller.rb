@@ -1,12 +1,28 @@
 class Api::V1::PlayersController < ApplicationController
 
   def current_player
-    @player = Player.find(params[:id])
-    render json: { player: @player }
+    player = Player.includes(:challenges, :pledges).find(params[:id])
+    target_pledges = Pledge.where(target_id: player.id, status: %w[ongoing done])
+
+    render json: {
+      player: player,
+      challenges: player.challenges,
+      pledges: player.pledges,
+      target_pledges: target_pledges,
+    }
   end
+
   def index
     @players = Player.all
-    render json: {players: @players }
+    players_format = @players.map  do |player|
+      {
+        player: player,
+        challenges: [],
+        pledges: [],
+        target_pledges: [],
+      }
+    end
+    render json: { players: players_format }
   end
 
   def create
