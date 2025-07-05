@@ -1,29 +1,19 @@
 class Api::V1::GamesController < ApplicationController
 
   def create
-    ActiveRecord::Base.transaction do
-      @game = Game.new(status: :ongoing, end_date: Date.today + 7)
-      players = params[:players].map do |player|
-        player[:id]
-      end
-      puts players
-      if @game.save!
-        players = Player.find(players) # ou récupérés dynamiquement
-
-        players.each do |player|
-          Participant.create(game: @game, player: player)
-        end
-
-        @game.reload
-        @game.send(:setup_game) # appel manuel du setup si nécessaire
-
-        render json: { game: @game }, include: ['challenge', 'pledges', 'players'], status: :created
-      end
+    @game = Game.new(status: :ongoing, end_date: Date.today + 7)
+    player_ids = params[:players].map { |player| player[:id] }
+    player_ids.each |player_id| do
+      @game.participants.build(player: Player.find(player_id))
     end
-    rescue Error => e
-      render json: { error: e.message }, status: :unprocessable_entity
-    rescue ActiveRecord::RecordInvalid => e
-      render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
+    if @game.save!
+      @game.send(:setup_game)
+
+      render json: { game: @game }, include: ['challenge', 'pledges', 'players'], status: :created
+    else
+      render json: { errors: @game.errors.full_messages, status: :unprocessable_entity }
+    end
+
   end
 
   def update
