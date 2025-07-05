@@ -11,18 +11,18 @@ class Pledge < ApplicationRecord
     done: 3,
   }, _prefix: :status
 
-  def next_step(id: nil)
+  def next_step(target: nil)
     transitions = {
-      created: -> { from_created_to_pending(id) },
+      created: -> { from_created_to_pending(target) },
       pending: -> { from_pending_to_ongoing },
       ongoing: -> {from_ongoing_to_done },
     }
     transitions[status.to_sym]&.call || self
   end
 
-  def from_created_to_pending(id)
+  def from_created_to_pending(target)
     transition(expected_status: :created, new_status: :pending) do |pledge|
-      pledge.target_id = id
+      pledge.target = target
     end
   end
 

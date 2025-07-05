@@ -11,7 +11,11 @@ Rails.application.routes.draw do
         end
       end
       resources :challenges, only: %i[create update destroy]
-      resources :pledges, only: %i[create index update destroy]
+      resources :pledges, only: %i[create index update destroy] do
+        member do
+          patch :mark_as_done
+        end
+      end
       resources :games, only: %i[create update] do
         collection do
           get :active_game

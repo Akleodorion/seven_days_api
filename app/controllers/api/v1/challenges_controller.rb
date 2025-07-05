@@ -20,6 +20,11 @@ class Api::V1::ChallengesController < ApplicationController
   end
 
   def destroy
+    if @challenge.destroy
+      render nil
+    else
+      render json: { errors: @challenge.errors.full_messages }, status: :unprocessable_entity
+    end
   end
 
   private

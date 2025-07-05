@@ -3,9 +3,9 @@ class CreatePledges < ActiveRecord::Migration[7.0]
     create_table :pledges do |t|
       t.integer :status, default: 0
       t.string :description, null: false
-      t.integer :target_id, null: true
+      t.references :target, foreign_key: { to_table: :players }
       t.references :player, null: false, foreign_key: true
-      t.references :game, null: false, foreign_key: true, null: true
+      t.references :game, foreign_key: true
 
       t.timestamps
     end

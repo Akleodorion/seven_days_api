@@ -40,7 +40,7 @@ class Api::V1::GamesController < ApplicationController
 
   def active_game
     @game = Game.active_game
-    render json: { game: @game }, include: ['challenge', 'pledges', 'players'], status: :ok
+    render json: { game: @game }, include: %w[challenge pledges players loosers winners], status: :ok
   end
 
   private
