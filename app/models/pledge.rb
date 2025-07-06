@@ -1,6 +1,7 @@
 class Pledge < ApplicationRecord
   belongs_to :player
   belongs_to :game, optional: true
+  belongs_to :target, optional: true, class_name: 'Player'
 
   validates :description, presence: true
 

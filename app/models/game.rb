@@ -1,5 +1,6 @@
 class Game < ApplicationRecord
 
+  belongs_to :stopped_by, optional: true, class_name: 'Player'
   has_one :challenge, dependent: :destroy # Doit avoir un challenge
   has_many :pledges, dependent: :destroy # Doit avoir X pledges, 1 par participant
   has_many :participants, dependent: :destroy
@@ -69,10 +70,10 @@ class Game < ApplicationRecord
   end
 
   def from_over_to_decided(winners, loosers)
-    winners.each { |winner| game.winners.build(player: Player.find(winner[:id])) }
-    loosers.each { |looser| game.loosers.build(player: Player.find(winner[:id])) }
+    winners.each { |winner| self.winners.build(player: Player.find(winner[:id])) }
+    loosers.each { |looser| self.loosers.build(player: Player.find(winner[:id])) }
 
-    transition(expected_status: :over, new_status: :decided) do |game|
+    transition(expected_status: :over, new_status: :decided) do
       reset_unpicked_pledges
     end
   end
@@ -82,7 +83,7 @@ class Game < ApplicationRecord
   end
 
   def reset_unpicked_pledges
-    pledges.where(target_id: game.winners.pluck(:player_id)).update_all(game: nil, target: nil, status: :pending)
+    pledges.where(target_id: self.winners.pluck(:player_id)).update_all(game_id: nil, target_id: nil, status: :pending)
   end
 
   def pledges_for_each_player
